@@ -35,7 +35,7 @@ thrust level from taxi (displayed as 'Thrust'), cash level (payout from missions
 
 ## Progression
 
--   maps generated get increasingly harder, and the player will have to service more customers while dealing with increased hazards
+-   maps generated get increasingly harder, and the player will have to pickup and dropoff more passengers successfully while dealing with increased hazard patterns
 
 -   maps require a certain number of passengers delivered in a certain time to fulfill quota (from hq)
 
