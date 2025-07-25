@@ -27,11 +27,11 @@
 
 ## Elements Of
 
-Pixel Art, Space Taxi, simple pew pew games, simple procedural cityscape, old school graphics and sound
+Pixel Art, Space Taxi, simple sidescroller shmup mechanic, simple procedural cityscape, old school graphics and sound
 
 ## UI
 
-thrust level from taxi (displayed as 'Thrust'), cash level (payout from missions). maybe minimap view?
+thrust level from taxi (displayed as 'Thrust'), cash level (payout from missions displayed as Cash). maybe minimap view? The rest of the UI is less obvious
 
 ## Progression
 
@@ -71,6 +71,8 @@ thrust level from taxi (displayed as 'Thrust'), cash level (payout from missions
 
 -   start less wide and get wider in dimensions (height staying rougly the same -- we are just covering more of the "city" as the player progresses)
 
--   player spawns on landing platforms with blinky red light (like a landing zone)
+-   player spawns on landing platforms
 
--   passengers spawn
+-   passengers spawn on similar platforms , destinations spawn after passengers spawn and exist as platforms with a green light.
+
+-   once a passenger is dropped off, receive payment
