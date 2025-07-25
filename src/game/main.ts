@@ -21,6 +21,13 @@ const config: Types.Core.GameConfig = {
         antialias: false,
         pixelArt: true,
     },
+    physics: {
+        default: "arcade",
+        arcade: {
+            gravity: { x: 0, y: 300 },
+            debug: false,
+        },
+    },
     scene: [Pre, MainGame],
 };
 

@@ -16,6 +16,9 @@ export class Pre extends Scene {
     preload() {
         this.load.setPath("assets");
         this.load.image("citybg", "citybg.png");
+        this.load.image("passenger", "passenger.png");
+        this.load.image("passenger2", "passenger2.png");
+        this.load.image("taxi", "taxi.png");
     }
 
     create() {
