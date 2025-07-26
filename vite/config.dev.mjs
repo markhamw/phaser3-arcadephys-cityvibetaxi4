@@ -12,6 +12,16 @@ export default defineConfig({
         },
     },
     server: {
-        port: 8080
+        port: 8080,
+        allowedHosts: [
+            'localhost',
+            '127.0.0.1',
+            '0.0.0.0',
+            '192.168.1.151',
+            '9e785c8ba63f.ngrok-free.app',
+            '.ngrok-free.app',
+            '.ngrok.io',
+            'all'
+        ]
     }
 });

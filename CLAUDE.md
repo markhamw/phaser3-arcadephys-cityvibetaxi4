@@ -9,7 +9,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 -   `npm run build` - Create production build in `dist/` folder
 -   `npm run dev-nolog` - Development server without telemetry
 -   `npm run build-nolog` - Production build without telemetry
--   IMPORTANT: Dont run npm commands to run server. It is on watch and re-renders automatically on change. It is available on port 8080
+-   IMPORTANT: Dont run `npm run dev`. It is on "watch" and re-renders automatically on change. It is available at http://localhost:8080
+-   IMPORTANT: Use Playwright (MCP) can be utilized for inspection
 
 ## Project Architecture
 
@@ -107,11 +108,11 @@ The City Vibe Taxi game uses a simplified building generation system that create
 
 ### Core Principles
 
-- **Minimal Building Count**: Each level contains exactly 2-3 buildings for clear navigation
-- **Standardized Dimensions**: Buildings use predefined grid-based widths and heights
-- **Simple Materials**: Only three material types: solid, brick, and concrete
-- **Clean Windows**: Basic grid pattern with lit/unlit states only
-- **No Complex Elements**: Removed garages, signs, balconies, and other architectural details
+-   **Minimal Building Count**: Each level contains exactly 2-3 buildings for clear navigation
+-   **Standardized Dimensions**: Buildings use predefined grid-based widths and heights
+-   **Simple Materials**: Only three material types: solid, brick, and concrete
+-   **Clean Windows**: Basic grid pattern with lit/unlit states only
+-   **No Complex Elements**: Removed garages, signs, balconies, and other architectural details
 
 ### Building Distribution
 
@@ -126,94 +127,106 @@ const gapSize = totalGapSpace / (buildingCount + 1); // Even distribution
 ### Standardized Dimensions
 
 #### Building Widths
-- **Available Options**: [60, 80, 100, 120, 140] pixels
-- **Selection**: Largest width that fits available space
-- **Purpose**: Consistent visual proportions
 
-#### Building Heights  
-- **Available Options**: [40, 60, 80, 100, 120, 140, 160] pixels
-- **Selection**: Random from options within difficulty-based height limit
-- **Tall Modifier**: 30% chance for 1.5x height increase (capped at 280px)
+-   **Available Options**: [60, 80, 100, 120, 140] pixels
+-   **Selection**: Largest width that fits available space
+-   **Purpose**: Consistent visual proportions
+
+#### Building Heights
+
+-   **Available Options**: [40, 60, 80, 100, 120, 140, 160] pixels
+-   **Selection**: Random from options within difficulty-based height limit
+-   **Tall Modifier**: 30% chance for 1.5x height increase (capped at 280px)
 
 ## Material System
 
 ### Supported Materials
 
 1. **Solid** (Default)
-   - Uses building's assigned color from environment palette
-   - Simple filled rectangle rendering
+
+    - Uses building's assigned color from environment palette
+    - Simple filled rectangle rendering
 
 2. **Brick**
-   - Authentic staggered brick pattern
-   - Multiple brown color variations
-   - Mortar gaps for realistic appearance
+
+    - Authentic staggered brick pattern
+    - Multiple brown color variations
+    - Mortar gaps for realistic appearance
 
 3. **Concrete**
-   - Simple gray (#808080) solid color
-   - Clean, industrial appearance
+    - Simple gray (#808080) solid color
+    - Clean, industrial appearance
 
 ### Material Selection
+
 ```typescript
-const materials: MaterialType[] = ['solid', 'brick', 'concrete'];
+const materials: MaterialType[] = ["solid", "brick", "concrete"];
 const material = materials[Math.floor(Math.random() * materials.length)];
 ```
 
 ## Window System
 
 ### Window Properties
-- **Dimensions**: 12×16 pixels (standardized)
-- **Spacing**: 8 pixels horizontal, 25 pixels vertical (floor height)
-- **Type**: Standard only (no bay, arched, or special windows)
-- **States**: Lit (50% chance) or unlit
-- **No Accessories**: Removed AC units, awnings, damage states
+
+-   **Dimensions**: 12×16 pixels (standardized)
+-   **Spacing**: 8 pixels horizontal, 25 pixels vertical (floor height)
+-   **Type**: Standard only (no bay, arched, or special windows)
+-   **States**: Lit (50% chance) or unlit
+-   **No Accessories**: Removed AC units, awnings, damage states
 
 ### Window Layout
+
 Windows are arranged in a clean grid pattern:
-- **Margin**: 8 pixels from building edges
-- **Centering**: Windows are centered within available width
-- **Floor-based**: Arranged by floor with consistent vertical spacing
+
+-   **Margin**: 8 pixels from building edges
+-   **Centering**: Windows are centered within available width
+-   **Floor-based**: Arranged by floor with consistent vertical spacing
 
 ## Technical Implementation
 
 ### Core Classes
 
 #### LevelGenerator
-- `generateBuildings()`: Creates 2-3 evenly spaced buildings
-- **Algorithm**: Calculates optimal spacing for visual balance
-- **Input**: Level width and difficulty
-- **Output**: Array of Building objects
 
-#### BuildingGenerator  
-- `generateBuilding()`: Creates single building with standardized properties
-- `generateSimpleWindows()`: Adds basic window grid
-- `selectSimpleMaterial()`: Chooses from 3 material types
+-   `generateBuildings()`: Creates 2-3 evenly spaced buildings
+-   **Algorithm**: Calculates optimal spacing for visual balance
+-   **Input**: Level width and difficulty
+-   **Output**: Array of Building objects
+
+#### BuildingGenerator
+
+-   `generateBuilding()`: Creates single building with standardized properties
+-   `generateSimpleWindows()`: Adds basic window grid
+-   `selectSimpleMaterial()`: Chooses from 3 material types
 
 ### Data Structures
 
 #### Simplified Building Interface
+
 ```typescript
 interface Building {
     id: string;
     x: number;
     y: number;
-    width: number;        // From standardized widths
-    height: number;       // From standardized heights
-    windows: Window[];    // Simple grid layout
-    color: string;        // From environment palette
+    width: number; // From standardized widths
+    height: number; // From standardized heights
+    windows: Window[]; // Simple grid layout
+    color: string; // From environment palette
     material: MaterialType; // 'solid' | 'brick' | 'concrete'
     // Removed: garage, signs, balconies, weathering, damage
 }
 ```
 
 #### Window Interface
+
 ```typescript
 interface Window {
     x: number;
     y: number;
-    width: 12;           // Fixed width
-    height: 16;          // Fixed height
-    isLit: boolean;      // 50% random chance
-    type: 'standard';    // Only standard type
+    width: 12; // Fixed width
+    height: 16; // Fixed height
+    isLit: boolean; // 50% random chance
+    type: "standard"; // Only standard type
     // Removed: hasAC, hasAwning, isBroken
 }
 ```
@@ -221,6 +234,7 @@ interface Window {
 ## Configuration
 
 ### Building Constants
+
 ```typescript
 LEVEL_CONFIG: {
     BUILDING_WIDTHS: [60, 80, 100, 120, 140],
@@ -233,28 +247,31 @@ LEVEL_CONFIG: {
 ## Performance Benefits
 
 ### Reduced Complexity
-- **90% fewer generation methods**: Removed complex element generation
-- **Simplified rendering**: Only 3 material types vs 6+ previously
-- **Faster level creation**: Single-pass generation vs multi-pass
-- **Lower memory usage**: No complex element arrays
+
+-   **90% fewer generation methods**: Removed complex element generation
+-   **Simplified rendering**: Only 3 material types vs 6+ previously
+-   **Faster level creation**: Single-pass generation vs multi-pass
+-   **Lower memory usage**: No complex element arrays
 
 ### Visual Consistency
-- **Predictable layouts**: Grid-based dimensions eliminate random sizing
-- **Clean alignment**: No depth offset or staggering effects
-- **Consistent spacing**: Mathematical distribution ensures proper gaps
+
+-   **Predictable layouts**: Grid-based dimensions eliminate random sizing
+-   **Clean alignment**: No depth offset or staggering effects
+-   **Consistent spacing**: Mathematical distribution ensures proper gaps
 
 ### Maintenance Advantages
-- **Easier debugging**: Fewer variables and edge cases
-- **Clearer code**: Simplified generation logic
-- **Better testing**: Predictable outcomes for validation
+
+-   **Easier debugging**: Fewer variables and edge cases
+-   **Clearer code**: Simplified generation logic
+-   **Better testing**: Predictable outcomes for validation
 
 ## Environment Integration
 
 The simplified building system integrates with existing environmental elements:
 
-- **Clouds**: Animated background elements (unchanged)
-- **Sun**: Static background element (unchanged)  
-- **Street/Horizon**: Ground level delineation (unchanged)
-- **Background Buildings**: Distant city silhouettes (unchanged)
+-   **Clouds**: Animated background elements (unchanged)
+-   **Sun**: Static background element (unchanged)
+-   **Street/Horizon**: Ground level delineation (unchanged)
+-   **Background Buildings**: Distant city silhouettes (unchanged)
 
 This simplified approach creates a clean, focused gameplay environment that emphasizes navigation and core game mechanics over architectural complexity.
