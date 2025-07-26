@@ -40,26 +40,22 @@ export type Color = keyof typeof COLORS;
 
 // Level Generation Constants
 export const LEVEL_CONFIG = {
-    // Building dimensions (based on 700x300 game size)
+    // Standardized building dimensions for clean rendering
+    BUILDING_WIDTHS: [100, 120, 140, 160, 180, 200, 220], // Standard widths (larger)
+    BUILDING_HEIGHTS: [80, 100, 120, 140, 160, 180, 200, 220, 240], // Standard heights (larger)
+    
+    // Legacy dimensions (kept for compatibility)
     MIN_BUILDING_WIDTH: 60,
     MAX_BUILDING_WIDTH: 120,
-    MIN_BUILDING_HEIGHT: 30, // 10% of 300px
-    MAX_BUILDING_HEIGHT: 195, // 65% of 300px
+    MIN_BUILDING_HEIGHT: 80, // Match smallest height in BUILDING_HEIGHTS
+    MAX_BUILDING_HEIGHT: 240, // Match largest height in BUILDING_HEIGHTS
 
     // Building spacing for safe navigation
-    MIN_BUILDING_GAP: 80, // Minimum gap between buildings
+    MIN_BUILDING_GAP: 50, // Minimum gap between buildings (reduced for larger buildings)
     MAX_BUILDING_GAP: 150, // Maximum gap between buildings
 
-    // Building variation chances (0.0 to 1.0)
-    BRICK_BUILDING_CHANCE: 0.3, // 30% chance for brick texture
-    TALL_BUILDING_CHANCE: 0.2, // 20% chance for double height
-    CONNECTED_STRUCTURE_CHANCE: 0.25, // 25% chance for connected garage
-
-    // Connected structure dimensions
-    GARAGE_MIN_WIDTH: 40,
-    GARAGE_MAX_WIDTH: 60,
-    GARAGE_MIN_HEIGHT: 20,
-    GARAGE_MAX_HEIGHT: 40,
+    // Simplified system - most variation chances removed
+    // Note: Tall building chance now handled directly in BuildingGenerator (30%)
 
     // Taxi dimensions for collision calculations
     TAXI_WIDTH: 24,
@@ -79,21 +75,31 @@ export const ENVIRONMENT_CONFIG = {
     SUN: {
         RADIUS: 25,
         X_POSITION: 600, // Position from left
-        Y_POSITION: 80, // Position from top
+        Y_POSITION: 180, // Higher in the sky
         COLOR: "#ffd700", // Golden color
     },
 
-    // Cloud settings
+    // Cloud settings - Updated for clustering and alpha variance
     CLOUDS: {
-        COUNT: 5, // Number of clouds
-        MIN_WIDTH: 40,
-        MAX_WIDTH: 80,
-        HEIGHT: 20, // Pill height
-        MIN_ALPHA: 0.25,
-        MAX_ALPHA: 0.5,
-        MIN_SPEED: 0.05, // Pixels per frame (slowed by 50%)
-        MAX_SPEED: 0.15, // Pixels per frame (slowed by 50%)
-        Y_RANGE: { MIN: 40, MAX: 120 }, // Vertical position range
+        CLUSTERS: {
+            COUNT: 2, // Number of cloud clusters
+            MIN_CLOUDS_PER_CLUSTER: 3,
+            MAX_CLOUDS_PER_CLUSTER: 6,
+            CLUSTER_SPREAD: 80, // Maximum distance between clouds in a cluster
+        },
+        MIN_WIDTH: 30,
+        MAX_WIDTH: 70,
+        HEIGHT: 18, // Pill height
+        MIN_ALPHA: 0.15, // Much more variance for depth
+        MAX_ALPHA: 0.65,
+        MIN_SPEED: 0.03, // Slower, more natural movement
+        MAX_SPEED: 0.08,
+        Y_RANGE: { MIN: 30, MAX: 140 }, // Vertical position range
+        ALPHA_LAYERS: {
+            BACKGROUND: { MIN: 0.15, MAX: 0.3 }, // Far clouds
+            MIDGROUND: { MIN: 0.3, MAX: 0.5 },   // Mid clouds  
+            FOREGROUND: { MIN: 0.5, MAX: 0.65 }, // Near clouds
+        },
     },
 
     // Bird settings
@@ -135,15 +141,94 @@ export const ENVIRONMENT_CONFIG = {
     HORIZON: {
         COLOR: "#1a1a1a", // Dark landscape color
         GRADIENT_HEIGHT: 30, // Height of gradient transition
+        Y_POSITION: 250, // Ground level for background buildings
     },
 } as const;
 
-// Brick texture patterns
-export const BRICK_PATTERNS = {
-    STANDARD: {
+// Material patterns and colors
+export const MATERIAL_PATTERNS = {
+    BRICK: {
         BRICK_WIDTH: 16,
         BRICK_HEIGHT: 8,
         MORTAR_COLOR: "#2a2a2a",
-        BRICK_COLORS: ["#8b4513", "#a0522d", "#cd853f", "#d2691e"],
+        BRICK_COLORS: ["#6B3410", "#8B4513", "#A0522D", "#5D2F0A"],
+    },
+    CONCRETE: {
+        BASE_COLORS: ["#252526", "#1f1f1f", "#141414", "#372a3b"],
+        STAIN_COLORS: ["#606060", "#555555", "#656565"],
+    },
+    GLASS: {
+        COLORS: ["#87ceeb", "#4682b4", "#5f9ea0", "#6495ed"],
+        REFLECTION_ALPHA: 0.3,
+    },
+    METAL: {
+        COLORS: ["#c0c0c0", "#a8a8a8", "#b8b8b8", "#d3d3d3"],
+        RUST_COLORS: ["#b7410e", "#a0522d", "#8b4513"],
+    },
+    STUCCO: {
+        COLORS: ["#f5deb3", "#deb887", "#d2b48c", "#bc9a6a"],
+        TEXTURE_SIZE: 2,
+    },
+} as const;
+
+// Building element configurations
+// Removed: BUILDING_ELEMENTS, MATERIAL_DISTRIBUTION - not used in simplified system
+
+// Removed: STYLE_DISTRIBUTION, SHAPE_DISTRIBUTION - simplified system uses fixed values
+
+// Removed: BILLBOARD_CONFIG - billboards completely removed from game
+
+// 2.5D depth configuration
+// Removed: DEPTH_CONFIG - simplified system uses no depth offset
+
+// Background metropolis configuration
+export const BACKGROUND_CONFIG = {
+    FAR_BUILDINGS: {
+        COUNT: 15,
+        WIDTH_RANGE: { MIN: 30, MAX: 80 }, // Made much wider
+        HEIGHT_RANGE: { MIN: 40, MAX: 120 },
+        Y_BASE: 200, // Base Y position
+        ALPHA: 0.3,
+        COLORS: ["#2c3e50", "#34495e", "#1a252f", "#273444"],
+        WINDOW_CHANCE: 0.8, // 80% chance buildings have windows
+        WINDOW_SPACING: 8, // Space between windows
+        WINDOW_SIZE: { WIDTH: 4, HEIGHT: 6 },
+    },
+    VERY_FAR_BUILDINGS: {
+        COUNT: 25,
+        WIDTH_RANGE: { MIN: 20, MAX: 50 }, // Made much wider
+        HEIGHT_RANGE: { MIN: 20, MAX: 80 },
+        Y_BASE: 220, // Base Y position (closer to horizon)
+        ALPHA: 0.15,
+        COLORS: ["#1a252f", "#273444", "#2c3e50"],
+        WINDOW_CHANCE: 0.6, // 60% chance buildings have windows (less detailed for very far)
+        WINDOW_SPACING: 6, // Smaller spacing for distant buildings
+        WINDOW_SIZE: { WIDTH: 2, HEIGHT: 4 },
+    },
+} as const;
+
+// Plane configuration for atmospheric aircraft
+export const PLANE_CONFIG = {
+    SPAWN_INTERVAL: 12000, // Milliseconds between plane spawns
+    SPAWN_VARIANCE: 8000, // Random variance in spawn timing
+    MAX_PLANES: 3, // Maximum planes on screen at once
+    
+    SMALL: {
+        SIZE: 6,
+        SPEED: 0.8,
+        Y_RANGE: { MIN: 20, MAX: 80 },
+        SPAWN_CHANCE: 0.5,
+    },
+    MEDIUM: {
+        SIZE: 12,
+        SPEED: 0.6,
+        Y_RANGE: { MIN: 30, MAX: 100 },
+        SPAWN_CHANCE: 0.3,
+    },
+    LARGE: {
+        SIZE: 20,
+        SPEED: 0.4,
+        Y_RANGE: { MIN: 40, MAX: 120 },
+        SPAWN_CHANCE: 0.2,
     },
 } as const;

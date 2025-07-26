@@ -10,7 +10,7 @@ const config: Types.Core.GameConfig = {
     width: 700,
     height: 300,
     parent: "game-container",
-    backgroundColor: SKY_COLORS.SUNSET_ORANGE,
+    backgroundColor: "#000000",
     pixelArt: true,
     roundPixels: true,
     scale: {

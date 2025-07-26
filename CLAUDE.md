@@ -9,6 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 -   `npm run build` - Create production build in `dist/` folder
 -   `npm run dev-nolog` - Development server without telemetry
 -   `npm run build-nolog` - Production build without telemetry
+-   IMPORTANT: Dont run npm commands to run server. It is on watch and re-renders automatically on change. It is available on port 8080
 
 ## Project Architecture
 
@@ -53,9 +54,9 @@ Organized color palettes in `src/constants/constants.ts`:
 ### Visual Style
 
 -   Pixel art aesthetic with dusky/sunset color palette
--   Procedural cityscape with buildings (10-65% screen height)
--   Buildings ( 1-3 ) spawn in early levels and for now
--   Buildings have 1-3 platforms and lit/unlit windows
+-   Simplified cityscape with 2-3 standardized buildings per level
+-   Buildings use grid-based dimensions for clean, aligned rendering
+-   Buildings have simple window patterns with lit/unlit states
 -   Taxi spawns on landing platforms, passengers spawn on similar platforms
 
 ## Asset Management
@@ -96,232 +97,164 @@ this.load.image("keyName", "filename.png");
 -   Color constants provide type safety and consistent theming
 -   Game uses Phaser's AUTO renderer type for optimal performance
 
-# City Vibe Taxi Game - Enhanced City Generation
+# City Vibe Taxi Game - Simplified Building Generation
 
 ## Overview
 
-This document describes the enhanced city generation system for the City Vibe Taxi game, featuring dynamic building variations, realistic environments, and atmospheric elements.
+The City Vibe Taxi game uses a simplified building generation system that creates clean, consistent cityscapes with 2-3 standardized buildings per level. This approach prioritizes visual clarity, performance, and maintainability over complex architectural details.
 
 ## Building Generation System
 
-### Building Variations
+### Core Principles
 
-#### 1. Brick Texture Buildings
+- **Minimal Building Count**: Each level contains exactly 2-3 buildings for clear navigation
+- **Standardized Dimensions**: Buildings use predefined grid-based widths and heights
+- **Simple Materials**: Only three material types: solid, brick, and concrete
+- **Clean Windows**: Basic grid pattern with lit/unlit states only
+- **No Complex Elements**: Removed garages, signs, balconies, and other architectural details
 
--   **Probability**: 30% chance per building (`LEVEL_CONFIG.BRICK_BUILDING_CHANCE`)
--   **Implementation**: Buildings can have realistic brick textures instead of solid colors
--   **Features**:
-    -   Staggered brick pattern for authenticity
-    -   Multiple brick colors: brown variations (`#8b4513`, `#a0522d`, `#cd853f`, `#d2691e`)
-    -   Mortar color: `#2a2a2a` (dark gray)
-    -   Brick dimensions: 8×4 pixels
+### Building Distribution
 
-#### 2. Tall Buildings
+Buildings are evenly distributed across the level width using a calculated spacing algorithm:
 
--   **Probability**: 20% chance per building (`LEVEL_CONFIG.TALL_BUILDING_CHANCE`)
--   **Implementation**: Buildings can be up to 100% taller than normal maximum height
--   **Height Calculation**: `baseHeight * 2` (capped at 280px to avoid touching top of screen)
--   **Visual Impact**: Creates varied skyline with prominent towers
+```typescript
+const buildingCount = Math.floor(Math.random() * 2) + 2; // 2-3 buildings
+const totalGapSpace = levelWidth * 0.3; // 30% for gaps
+const gapSize = totalGapSpace / (buildingCount + 1); // Even distribution
+```
 
-#### 3. Connected Structures (Garages)
+### Standardized Dimensions
 
--   **Probability**: 25% chance per building (`LEVEL_CONFIG.CONNECTED_STRUCTURE_CHANCE`)
--   **Dimensions**:
-    -   Width: 40-60 pixels
-    -   Height: 20-40 pixels
--   **Positioning**: Randomly placed left or right of main building
--   **Features**:
-    -   Independent brick/solid texture decision
-    -   Separate color from main building
-    -   Extends building footprint when needed
+#### Building Widths
+- **Available Options**: [60, 80, 100, 120, 140] pixels
+- **Selection**: Largest width that fits available space
+- **Purpose**: Consistent visual proportions
 
-### Building Width Adaptation
+#### Building Heights  
+- **Available Options**: [40, 60, 80, 100, 120, 140, 160] pixels
+- **Selection**: Random from options within difficulty-based height limit
+- **Tall Modifier**: 30% chance for 1.5x height increase (capped at 280px)
 
--   Main buildings expand by 50% of garage width when garage is added
--   Ensures visual coherence between connected structures
--   Maintains proper spacing and navigation gaps
+## Material System
 
-## Environment Elements
+### Supported Materials
 
-### 1. Street and Horizon
+1. **Solid** (Default)
+   - Uses building's assigned color from environment palette
+   - Simple filled rectangle rendering
 
--   **Street Area**: Dark strip at ground level (`#1a1a1a`)
--   **Street Height**: 20 pixels (`LEVEL_CONFIG.STREET_HEIGHT`)
--   **Horizon Gradient**: 30-pixel transition from street to background
--   **Purpose**: Clearly delineates ground level and adds urban realism
+2. **Brick**
+   - Authentic staggered brick pattern
+   - Multiple brown color variations
+   - Mortar gaps for realistic appearance
 
-### 2. Sun
+3. **Concrete**
+   - Simple gray (#808080) solid color
+   - Clean, industrial appearance
 
--   **Position**: X: 600px, Y: 80px (upper right area)
--   **Radius**: 25 pixels
--   **Color**: Golden `#ffd700`
--   **Style**: Solid circle for clear visibility against sky
+### Material Selection
+```typescript
+const materials: MaterialType[] = ['solid', 'brick', 'concrete'];
+const material = materials[Math.floor(Math.random() * materials.length)];
+```
 
-### 3. Animated Clouds
+## Window System
 
--   **Count**: 5 clouds per level
--   **Shape**: Pill-shaped (rounded rectangles)
--   **Dimensions**:
-    -   Width: 40-80 pixels (random)
-    -   Height: 20 pixels (fixed)
--   **Visual Properties**:
-    -   Alpha: 0.25-0.5 (semi-transparent)
-    -   Color: White (`#ffffff`)
--   **Animation**:
-    -   Speed: 0.1-0.3 pixels per frame (random per cloud)
-    -   Movement: Horizontal left-to-right
-    -   Wrapping: Clouds loop around screen edges
-    -   Vertical Position: 40-120 pixels from top (random)
+### Window Properties
+- **Dimensions**: 12×16 pixels (standardized)
+- **Spacing**: 8 pixels horizontal, 25 pixels vertical (floor height)
+- **Type**: Standard only (no bay, arched, or special windows)
+- **States**: Lit (50% chance) or unlit
+- **No Accessories**: Removed AC units, awnings, damage states
+
+### Window Layout
+Windows are arranged in a clean grid pattern:
+- **Margin**: 8 pixels from building edges
+- **Centering**: Windows are centered within available width
+- **Floor-based**: Arranged by floor with consistent vertical spacing
 
 ## Technical Implementation
 
+### Core Classes
+
+#### LevelGenerator
+- `generateBuildings()`: Creates 2-3 evenly spaced buildings
+- **Algorithm**: Calculates optimal spacing for visual balance
+- **Input**: Level width and difficulty
+- **Output**: Array of Building objects
+
+#### BuildingGenerator  
+- `generateBuilding()`: Creates single building with standardized properties
+- `generateSimpleWindows()`: Adds basic window grid
+- `selectSimpleMaterial()`: Chooses from 3 material types
+
 ### Data Structures
 
-#### Building Interface
-
+#### Simplified Building Interface
 ```typescript
 interface Building {
     id: string;
     x: number;
     y: number;
-    width: number;
-    height: number;
-    windows: Window[];
-    color: string;
-    isBrick: boolean; // New: Brick texture flag
-    isTall: boolean; // New: Double height flag
-    garage?: Garage; // New: Optional connected structure
-    collisionBody?: Phaser.Physics.Arcade.Body;
+    width: number;        // From standardized widths
+    height: number;       // From standardized heights
+    windows: Window[];    // Simple grid layout
+    color: string;        // From environment palette
+    material: MaterialType; // 'solid' | 'brick' | 'concrete'
+    // Removed: garage, signs, balconies, weathering, damage
 }
 ```
 
-#### Garage Interface
-
+#### Window Interface
 ```typescript
-interface Garage {
+interface Window {
     x: number;
     y: number;
-    width: number;
-    height: number;
-    color: string;
-    isBrick: boolean;
+    width: 12;           // Fixed width
+    height: 16;          // Fixed height
+    isLit: boolean;      // 50% random chance
+    type: 'standard';    // Only standard type
+    // Removed: hasAC, hasAwning, isBroken
 }
 ```
 
-#### Cloud Interface
+## Configuration
 
+### Building Constants
 ```typescript
-interface Cloud {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    alpha: number;
-    speed: number;
+LEVEL_CONFIG: {
+    BUILDING_WIDTHS: [60, 80, 100, 120, 140],
+    BUILDING_HEIGHTS: [40, 60, 80, 100, 120, 140, 160],
+    MIN_BUILDING_GAP: 80,
+    MAX_BUILDING_GAP: 150,
 }
 ```
 
-### Generation Process
+## Performance Benefits
 
-#### 1. Building Generation (`BuildingGenerator.generateBuilding`)
+### Reduced Complexity
+- **90% fewer generation methods**: Removed complex element generation
+- **Simplified rendering**: Only 3 material types vs 6+ previously
+- **Faster level creation**: Single-pass generation vs multi-pass
+- **Lower memory usage**: No complex element arrays
 
-1. Determine building variations using RNG
-2. Calculate dimensions (apply tall modifier if selected)
-3. Generate garage if selected
-4. Adjust width to accommodate garage
-5. Generate windows avoiding garage overlap
-6. Return complete building structure
+### Visual Consistency
+- **Predictable layouts**: Grid-based dimensions eliminate random sizing
+- **Clean alignment**: No depth offset or staggering effects
+- **Consistent spacing**: Mathematical distribution ensures proper gaps
 
-#### 2. Level Generation (`LevelGenerator.generateLevel`)
+### Maintenance Advantages
+- **Easier debugging**: Fewer variables and edge cases
+- **Clearer code**: Simplified generation logic
+- **Better testing**: Predictable outcomes for validation
 
-1. Generate buildings with spacing validation
-2. Generate cloud array with random properties
-3. Return level with buildings and environmental elements
+## Environment Integration
 
-#### 3. Rendering Process (`Game.renderLevel`)
+The simplified building system integrates with existing environmental elements:
 
-1. **Environment Layer**:
-    - Street/horizon gradient
-    - Sun (static)
-    - Clouds (animated)
-2. **Building Layer**:
-    - Main building structures
-    - Garage structures (if present)
-    - Windows with cross patterns
+- **Clouds**: Animated background elements (unchanged)
+- **Sun**: Static background element (unchanged)  
+- **Street/Horizon**: Ground level delineation (unchanged)
+- **Background Buildings**: Distant city silhouettes (unchanged)
 
-### Rendering Details
-
-#### Brick Texture Algorithm
-
-1. Fill area with mortar color
-2. Calculate brick grid with staggered rows
-3. Render individual bricks with random colors
-4. Clip bricks to building boundaries
-5. Leave 1-pixel gaps for mortar visibility
-
-#### Cloud Animation
-
--   Real-time position updates in `update()` loop
--   Clear and re-render environment graphics each frame
--   Seamless wrapping at screen edges
--   Independent speed for each cloud creates parallax-like effect
-
-## Configuration Constants
-
-### Building Variations
-
-```typescript
-BRICK_BUILDING_CHANCE: 0.3; // 30% probability
-TALL_BUILDING_CHANCE: 0.2; // 20% probability
-CONNECTED_STRUCTURE_CHANCE: 0.25; // 25% probability
-```
-
-### Environment Settings
-
-```typescript
-ENVIRONMENT_CONFIG: {
-    SUN: { RADIUS: 25, X_POSITION: 600, Y_POSITION: 80 },
-    CLOUDS: { COUNT: 5, MIN_WIDTH: 40, MAX_WIDTH: 80, HEIGHT: 20 },
-    HORIZON: { COLOR: "#1a1a1a", GRADIENT_HEIGHT: 30 }
-}
-```
-
-## Visual Design Philosophy
-
-### Color Harmony
-
--   Building colors use existing environment palette
--   Brick colors complement sunset/dusk theme
--   Street darkness contrasts with illuminated buildings
--   Cloud transparency preserves background visibility
-
-### Architectural Realism
-
--   Brick patterns follow real-world masonry techniques
--   Garage placement mimics urban building arrangements
--   Height variations create believable city skyline
--   Window patterns remain consistent across building types
-
-### Atmospheric Enhancement
-
--   Moving clouds suggest wind and weather
--   Low sun position implies sunset/sunrise timing
--   Street delineation grounds buildings in urban context
--   Transparency effects add depth and atmosphere
-
-## Performance Considerations
-
-### Optimization Strategies
-
--   Brick rendering uses minimal draw calls
--   Cloud animation reuses existing graphics objects
--   Environment layer renders separately from building layer
--   Texture patterns calculated once per building
-
-### Resource Management
-
--   Graphics objects properly cleaned up in `shutdown()`
--   Cloud array copied to avoid modifying level data
--   Rendering layers isolated for independent updates
-
-This enhanced system creates a dynamic, atmospheric city environment that maintains performance while adding significant visual variety and realism to the game world.
+This simplified approach creates a clean, focused gameplay environment that emphasizes navigation and core game mechanics over architectural complexity.

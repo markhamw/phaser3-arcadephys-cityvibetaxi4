@@ -4,6 +4,10 @@ export interface Window {
     width: number;
     height: number;
     isLit: boolean;
+    type: "standard"; // Simplified to only standard windows
+    hasAC: boolean; // Always false in simplified system
+    hasAwning: boolean; // Always false in simplified system
+    isBroken: boolean; // Always false in simplified system
 }
 
 export interface Platform {
@@ -18,6 +22,48 @@ export interface Platform {
     collisionBody?: Phaser.Physics.Arcade.Body;
 }
 
+export interface RooftopElement {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    type: "chimney" | "ac_unit" | "antenna" | "water_tower" | "stairwell_exit" | "satellite";
+}
+
+export interface FireEscape {
+    x: number;
+    startY: number;
+    endY: number;
+    side: "left" | "right";
+}
+
+export interface Entrance {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    type: "door" | "storefront" | "lobby" | "double_door";
+    hasAwning: boolean;
+    hasSteps: boolean;
+}
+
+export interface Balcony {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    floor: number;
+}
+
+export interface BuildingSign {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    type: "neon" | "banner" | "building_number" | "company_name";
+    isLit: boolean;
+}
+
 export interface Garage {
     x: number;
     y: number;
@@ -25,7 +71,13 @@ export interface Garage {
     height: number;
     color: string;
     isBrick: boolean;
+    material: MaterialType;
+    depthOffset: number; // 2.5D depth positioning offset
 }
+
+export type MaterialType = "solid" | "brick" | "concrete"; // Simplified to 3 materials
+export type ArchitecturalStyle = "modern" | "art_deco" | "classical" | "industrial" | "residential";
+export type BuildingShape = "rectangle" | "l_shape" | "stepped" | "setback";
 
 export interface Building {
     id: string;
@@ -35,9 +87,19 @@ export interface Building {
     height: number;
     windows: Window[];
     color: string;
-    isBrick: boolean;
-    isTall: boolean;
-    garage?: Garage;
+    material: MaterialType; // Only solid, brick, concrete
+    style: ArchitecturalStyle; // Always 'modern' in simplified system
+    shape: BuildingShape; // Always 'rectangle' in simplified system
+    isTall: boolean; // 30% chance for 1.5x height
+    depthOffset: number; // Always 0 in simplified system
+    garage?: Garage; // Always undefined in simplified system
+    rooftopElements: RooftopElement[]; // Always empty in simplified system
+    fireEscape?: FireEscape; // Always undefined in simplified system
+    entrances: Entrance[]; // Always empty in simplified system
+    balconies: Balcony[]; // Always empty in simplified system
+    signs: BuildingSign[]; // Always empty in simplified system
+    hasWeathering: boolean; // Always false in simplified system
+    hasDamage: boolean; // Always false in simplified system
     collisionBody?: Phaser.Physics.Arcade.Body;
 }
 
@@ -48,6 +110,8 @@ export interface Cloud {
     height: number;
     alpha: number;
     speed: number;
+    clusterId: number; // Which cluster this cloud belongs to
+    layer: "background" | "midground" | "foreground"; // Depth layer for alpha variance
 }
 
 export interface Bird {
@@ -62,9 +126,39 @@ export interface Bird {
     distance: "far" | "medium" | "close"; // Distance layer
 }
 
+
+export interface BackgroundBuilding {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    color: string;
+    distance: "far" | "very_far";
+    windows?: BackgroundWindow[];
+}
+
+export interface BackgroundWindow {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    isLit: boolean;
+}
+
+export interface Plane {
+    x: number;
+    y: number;
+    size: number;
+    speed: number;
+    type: "small" | "medium" | "large";
+    direction: number; // -1 for left, 1 for right
+}
+
 export interface Level {
     buildings: Building[];
     clouds: Cloud[];
+    backgroundBuildings: BackgroundBuilding[];
+    planes: Plane[];
     width: number;
     height: number;
 }
